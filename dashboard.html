@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #eef2f5;
+            padding: 50px;
+        }
+        .dashboard {
+            background: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <h1>لوحة التحكم</h1>
+        <p>هنا ستظهر واجهة التداول والمحاكاة.</p>
+        <p>القيمة المختارة: <span id="offer"></span>$</p>
+    </div>
+
+    <script>
+        // عرض القيمة المختارة في لوحة التحكم
+        document.getElementById('offer').innerText = localStorage.getItem('selectedOffer');
+    </script>
+</body>
+</html>
