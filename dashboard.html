@@ -1,34 +1,99 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            background-color: #eef2f5;
-            padding: 50px;
-        }
-        .dashboard {
-            background: #fff;
-            padding: 30px;
-            border-radius: 10px;
-            display: inline-block;
-        }
-    </style>
+<meta charset="UTF-8">
+<title>Prop Challenge Dashboard</title>
+<style>
+body {
+    font-family: Arial;
+    background:#eef2f5;
+    text-align:center;
+    padding:30px;
+}
+.box {
+    background:white;
+    padding:20px;
+    border-radius:10px;
+    max-width:420px;
+    margin:auto;
+}
+.price {
+    font-size:32px;
+    margin:15px 0;
+}
+button {
+    padding:10px 15px;
+    margin:5px;
+    border:none;
+    border-radius:6px;
+    font-size:15px;
+    cursor:pointer;
+}
+.buy {background:#28a745;color:white;}
+.sell {background:#dc3545;color:white;}
+.close {background:#333;color:white;}
+.stats {
+    margin-top:15px;
+    font-size:16px;
+}
+</style>
 </head>
 <body>
-    <div class="dashboard">
-        <h1>لوحة التحكم</h1>
-        <p>هنا ستظهر واجهة التداول والمحاكاة.</p>
-        <p>القيمة المختارة: <span id="offer"></span>$</p>
-    </div>
 
-    <script>
-        // عرض القيمة المختارة في لوحة التحكم
-        document.getElementById('offer').innerText = localStorage.getItem('selectedOffer');
-    </script>
+<div class="box">
+    <h2>Prop Challenge</h2>
+
+    <div class="price" id="price">100.00</div>
+
+    <button class="buy" onclick="openTrade('buy')">Buy</button>
+    <button class="sell" onclick="openTrade('sell')">Sell</button>
+    <button class="close" onclick="closeTrade()">Close</button>
+
+    <div class="stats">
+        <p>Balance: <span id="balance">1000</span>$</p>
+        <p>PNL: <span id="pnl">0</span>$</p>
+        <p>Status: <span id="status">No Trade</span></p>
+    </div>
+</div>
+
+<script>
+let balance = 1000;
+let price = 100;
+let trade = null;
+let pnl = 0;
+
+// تحريك السعر
+setInterval(() => {
+    price += (Math.random() - 0.5) * 0.5;
+    document.getElementById("price").innerText = price.toFixed(2);
+
+    if (trade) {
+        pnl = trade.type === "buy"
+            ? (price - trade.entry) * 10
+            : (trade.entry - price) * 10;
+
+        document.getElementById("pnl").innerText = pnl.toFixed(2);
+    }
+}, 1000);
+
+// فتح صفقة
+function openTrade(type) {
+    if (trade) return alert("يوجد صفقة مفتوحة بالفعل");
+    trade = { type, entry: price };
+    document.getElementById("status").innerText = type.toUpperCase();
+}
+
+// إغلاق الصفقة
+function closeTrade() {
+    if (!trade) return;
+    balance += pnl;
+    document.getElementById("balance").innerText = balance.toFixed(2);
+    trade = null;
+    pnl = 0;
+    document.getElementById("pnl").innerText = "0";
+    document.getElementById("status").innerText = "No Trade";
+}
+</script>
+
 </body>
 </html>
