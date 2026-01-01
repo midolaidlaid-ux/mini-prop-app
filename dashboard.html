@@ -1,92 +1,125 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mini Prop Challenge</title>
-  <style>
-    body { font-family: Arial, sans-serif; padding: 20px; background: #f2f2f2; }
-    h2 { color: #333; }
-    .price { font-size: 1.2em; margin: 10px 0; }
-    button { margin: 5px; padding: 10px 20px; font-size: 1em; cursor: pointer; }
-    #log { margin-top: 20px; background: #fff; padding: 10px; border-radius: 5px; max-height: 200px; overflow-y: auto; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mini Prop Challenge</title>
+<style>
+  body { font-family: Arial, sans-serif; padding: 20px; background: #f2f2f2; }
+  h2, h3 { color: #333; }
+  .price, .balance { font-size: 1.2em; margin: 10px 0; }
+  button { margin: 5px; padding: 10px 20px; font-size: 1em; cursor: pointer; }
+  #log { margin-top: 20px; background: #fff; padding: 10px; border-radius: 5px; max-height: 300px; overflow-y: auto; }
+</style>
 </head>
 <body>
-  <h2>Mini Prop Challenge</h2>
+<h2>Mini Prop Challenge</h2>
 
-  <div class="price">
-    سعر BTC: <span id="btc-price">جارٍ التحميل...</span>
-  </div>
-  <div class="price">
-    سعر EUR/USD: <span id="eurusd-price">جارٍ التحميل...</span>
-  </div>
+<div class="price">
+  سعر BTC: <span id="btc-price">جارٍ التحميل...</span>
+</div>
+<div class="price">
+  سعر EUR/USD: <span id="eurusd-price">جارٍ التحميل...</span>
+</div>
 
-  <h3>أوامر التداول</h3>
-  <button onclick="buy('BTC', 1)">Buy BTC</button>
-  <button onclick="sell('BTC', 1)">Sell BTC</button>
-  <button onclick="buy('EURUSD', 100)">Buy EUR/USD</button>
-  <button onclick="sell('EURUSD', 100)">Sell EUR/USD</button>
+<div class="balance">
+  الرصيد: <span id="balance">5000</span> $  
+  | الربح/الخسارة: <span id="pnl">0</span> $  
+</div>
 
-  <div id="log"></div>
+<h3>أوامر التداول</h3>
+<button onclick="buy('BTC', 1)">Buy BTC</button>
+<button onclick="sell('BTC', 1)">Sell BTC</button>
+<button onclick="buy('EURUSD', 100)">Buy EUR/USD</button>
+<button onclick="sell('EURUSD', 100)">Sell EUR/USD</button>
 
-  <script>
-    // رابط Backend الخاص بك على Render
-    const backendURL = "https://prop-backend-32qf.onrender.com";
+<div id="log"></div>
 
-    // وظيفة لجلب سعر العملات الرقمية
-    async function fetchCryptoPrice(symbol) {
-      try {
-        const res = await fetch(`${backendURL}/price/crypto/${symbol.toLowerCase()}`);
-        const data = await res.json();
-        return data.price;
-      } catch(err) {
-        console.error(err);
-        return "خطأ في جلب السعر";
-      }
-    }
+<script>
+const backendURL = "https://prop-backend-32qf.onrender.com";
 
-    // وظيفة لجلب سعر الفوركس
-    async function fetchForexPrice(pair) {
-      try {
-        const res = await fetch(`${backendURL}/price/forex/${pair}`);
-        const data = await res.json();
-        return data.price;
-      } catch(err) {
-        console.error(err);
-        return "خطأ في جلب السعر";
-      }
-    }
+// إعداد التحدي
+const MAX_PROFIT = 200;
+const MAX_LOSS = 4600;
+const TARGET_BALANCE = 6000;
+let balance = 5000;
+let pnl = 0;
+let challengeActive = true;
 
-    // تحديث الأسعار كل 5 ثواني
-    async function updatePrices() {
-      const btcPrice = await fetchCryptoPrice("BTC");
-      const eurusdPrice = await fetchForexPrice("EURUSD");
-      document.getElementById("btc-price").innerText = btcPrice;
-      document.getElementById("eurusd-price").innerText = eurusdPrice;
-    }
-    updatePrices();
-    setInterval(updatePrices, 5000);
+// محاكاة الأسعار
+async function fetchCryptoPrice(symbol) {
+  try {
+    const res = await fetch(`${backendURL}/price/crypto/${symbol.toLowerCase()}`);
+    const data = await res.json();
+    return data.price;
+  } catch { return null; }
+}
+async function fetchForexPrice(pair) {
+  try {
+    const res = await fetch(`${backendURL}/price/forex/${pair}`);
+    const data = await res.json();
+    return data.price;
+  } catch { return null; }
+}
 
-    // محاكاة أوامر التداول
-    const logDiv = document.getElementById("log");
+// تحديث الأسعار كل 5 ثواني
+async function updatePrices() {
+  const btcPrice = await fetchCryptoPrice("BTC");
+  const eurusdPrice = await fetchForexPrice("EURUSD");
+  if(btcPrice) document.getElementById("btc-price").innerText = btcPrice;
+  if(eurusdPrice) document.getElementById("eurusd-price").innerText = eurusdPrice;
+}
+updatePrices();
+setInterval(updatePrices, 5000);
 
-    function logAction(text) {
-      const p = document.createElement("p");
-      p.innerText = text;
-      logDiv.appendChild(p);
-      logDiv.scrollTop = logDiv.scrollHeight;
-    }
+// تحديث الرصيد والـ PnL
+function updateBalance() {
+  document.getElementById("balance").innerText = balance.toFixed(2);
+  document.getElementById("pnl").innerText = pnl.toFixed(2);
+}
 
-    function buy(symbol, amount) {
-      logAction(`تم تنفيذ Buy: ${amount} من ${symbol}`);
-      // هنا يمكن ربط مع الحساب / Balance
-    }
+// تسجيل الأوامر
+const logDiv = document.getElementById("log");
+function logAction(text) {
+  const p = document.createElement("p");
+  p.innerText = text;
+  logDiv.appendChild(p);
+  logDiv.scrollTop = logDiv.scrollHeight;
+}
 
-    function sell(symbol, amount) {
-      logAction(`تم تنفيذ Sell: ${amount} من ${symbol}`);
-      // هنا يمكن ربط مع الحساب / Balance
-    }
-  </script>
+// أوامر التداول
+function buy(symbol, amount) {
+  if(!challengeActive) { logAction("التحدي انتهى. لا يمكن التداول."); return; }
+  simulateTrade(symbol, amount, "Buy");
+}
+function sell(symbol, amount) {
+  if(!challengeActive) { logAction("التحدي انتهى. لا يمكن التداول."); return; }
+  simulateTrade(symbol, amount, "Sell");
+}
+
+// محاكاة تنفيذ الصفقة وتحديث PnL
+async function simulateTrade(symbol, amount, type) {
+  let price = 0;
+  if(symbol === "BTC") price = await fetchCryptoPrice("BTC");
+  if(symbol === "EURUSD") price = await fetchForexPrice("EURUSD");
+  if(!price) { logAction("فشل جلب السعر."); return; }
+
+  let change = type === "Buy" ? amount * price * 0.01 : -amount * price * 0.01; // محاكاة بسيطة
+  pnl += change;
+  balance = 5000 + pnl;
+
+  logAction(`${type} ${amount} من ${symbol} | السعر: ${price.toFixed(2)} | PnL: ${pnl.toFixed(2)}`);
+
+  // تحقق الشروط
+  if(pnl >= MAX_PROFIT) { logAction("وصلت للربح الأقصى. التحدي انتهى."); challengeActive = false; }
+  if(balance <= 5000 - MAX_LOSS) { logAction("وصلت للخسارة القصوى. التحدي انتهى."); challengeActive = false; }
+  if(balance >= TARGET_BALANCE) { logAction("تهانينا! وصلت للهدف. التحدي انتهى."); challengeActive = false; }
+
+  updateBalance();
+}
+
+// بدء العرض
+updateBalance();
+</script>
 </body>
 </html>
