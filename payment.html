@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>صفحة الدفع</title>
+</head>
+<body>
+    <h1>صفحة الدفع التجريبية</h1>
+    <p>لقد اخترت حساب بقيمة: <span id="selected"></span>$</p>
+    <button onclick="proceed()">استمرار إلى لوحة التحكم</button>
+
+    <script>
+        // عرض القيمة المختارة
+        document.getElementById('selected').innerText = localStorage.getItem('selectedOffer');
+
+        // التوجيه إلى لوحة التحكم
+        function proceed() {
+            window.location.href = "dashboard.html";
+        }
+    </script>
+</body>
+</html>
