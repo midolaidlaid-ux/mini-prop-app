@@ -1,165 +1,92 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-<meta charset="UTF-8">
-<title>Prop Challenge</title>
-<style>
-body {
-    font-family: Arial;
-    background:#eef2f5;
-    text-align:center;
-    padding:30px;
-}
-.box {
-    background:white;
-    padding:20px;
-    border-radius:10px;
-    max-width:450px;
-    margin:auto;
-}
-.price {
-    font-size:32px;
-    margin:15px 0;
-}
-button {
-    padding:10px 15px;
-    margin:5px;
-    border:none;
-    border-radius:6px;
-    font-size:15px;
-    cursor:pointer;
-}
-.buy {background:#28a745;color:white;}
-.sell {background:#dc3545;color:white;}
-.close {background:#333;color:white;}
-.pass {color:green;font-weight:bold;}
-.fail {color:red;font-weight:bold;}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mini Prop Challenge</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f2f2f2; }
+    h2 { color: #333; }
+    .price { font-size: 1.2em; margin: 10px 0; }
+    button { margin: 5px; padding: 10px 20px; font-size: 1em; cursor: pointer; }
+    #log { margin-top: 20px; background: #fff; padding: 10px; border-radius: 5px; max-height: 200px; overflow-y: auto; }
+  </style>
 </head>
 <body>
+  <h2>Mini Prop Challenge</h2>
 
-<div class="box">
-    <h2>Prop Challenge</h2>
+  <div class="price">
+    سعر BTC: <span id="btc-price">جارٍ التحميل...</span>
+  </div>
+  <div class="price">
+    سعر EUR/USD: <span id="eurusd-price">جارٍ التحميل...</span>
+  </div>
 
-    <div class="price" id="price">100.00</div>
+  <h3>أوامر التداول</h3>
+  <button onclick="buy('BTC', 1)">Buy BTC</button>
+  <button onclick="sell('BTC', 1)">Sell BTC</button>
+  <button onclick="buy('EURUSD', 100)">Buy EUR/USD</button>
+  <button onclick="sell('EURUSD', 100)">Sell EUR/USD</button>
 
-    <button class="buy" onclick="openTrade('buy')">Buy</button>
-    <button class="sell" onclick="openTrade('sell')">Sell</button>
-    <button class="close" onclick="closeTrade()">Close</button>
+  <div id="log"></div>
 
-    <p>Balance: <span id="balance">5000</span>$</p>
-    <p>Daily PnL: <span id="dailyPnl">0</span>$</p>
-    <p>Day: <span id="day">1</span> / 10</p>
-    <p>Status: <span id="status">Active</span></p>
-</div>
+  <script>
+    // رابط Backend الخاص بك على Render
+    const backendURL = "https://prop-backend-32qf.onrender.com";
 
-<script>
-// ===== إعدادات =====
-const START_BALANCE = 5000;
-const TARGET_BALANCE = 6000;
-const MAX_LOSS_BALANCE = 4600;
-const DAILY_LIMIT = 200;
-const MAX_DAYS = 10;
-
-// ===== الحالة =====
-let balance = START_BALANCE;
-let day = 1;
-let dailyStartBalance = START_BALANCE;
-let dailyPnl = 0;
-
-let price = 100;
-let trade = null;
-let pnl = 0;
-let status = "Active";
-
-// ===== السعر =====
-setInterval(() => {
-    if (status !== "Active") return;
-
-    price += (Math.random() - 0.5) * 0.5;
-    document.getElementById("price").innerText = price.toFixed(2);
-
-    if (trade) {
-        pnl = trade.type === "buy"
-            ? (price - trade.entry) * 10
-            : (trade.entry - price) * 10;
+    // وظيفة لجلب سعر العملات الرقمية
+    async function fetchCryptoPrice(symbol) {
+      try {
+        const res = await fetch(`${backendURL}/price/crypto/${symbol.toLowerCase()}`);
+        const data = await res.json();
+        return data.price;
+      } catch(err) {
+        console.error(err);
+        return "خطأ في جلب السعر";
+      }
     }
-}, 1000);
 
-// ===== فتح صفقة =====
-function openTrade(type) {
-    if (status !== "Active") return;
-    if (trade) return alert("صفقة مفتوحة بالفعل");
-
-    trade = { type, entry: price };
-}
-
-// ===== إغلاق صفقة =====
-function closeTrade() {
-    if (!trade || status !== "Active") return;
-
-    balance += pnl;
-    dailyPnl = balance - dailyStartBalance;
-
-    updateUI();
-
-    trade = null;
-    pnl = 0;
-
-    checkRules();
-}
-
-// ===== تحديث الواجهة =====
-function updateUI() {
-    document.getElementById("balance").innerText = balance.toFixed(2);
-    document.getElementById("dailyPnl").innerText = dailyPnl.toFixed(2);
-}
-
-// ===== القواعد =====
-function checkRules() {
-
-    // Daily profit / loss
-    if (dailyPnl >= DAILY_LIMIT)
-        return fail("تجاوزت الحد اليومي للربح");
-
-    if (dailyPnl <= -DAILY_LIMIT)
-        return fail("تجاوزت الحد اليومي للخسارة");
-
-    // Max loss
-    if (balance <= MAX_LOSS_BALANCE)
-        return fail("وصلت إلى الحد الأقصى للخسارة");
-
-    // Target
-    if (balance >= TARGET_BALANCE) {
-        status = "Passed";
-        document.getElementById("status").innerHTML =
-            "<span class='pass'>PASSED</span>";
-        return alert("🎉 مبروك! أكملت التحدي بنجاح");
+    // وظيفة لجلب سعر الفوركس
+    async function fetchForexPrice(pair) {
+      try {
+        const res = await fetch(`${backendURL}/price/forex/${pair}`);
+        const data = await res.json();
+        return data.price;
+      } catch(err) {
+        console.error(err);
+        return "خطأ في جلب السعر";
+      }
     }
-}
 
-// ===== فشل =====
-function fail(reason) {
-    status = "Failed";
-    document.getElementById("status").innerHTML =
-        "<span class='fail'>FAILED</span>";
-    alert("❌ فشل التحدي: " + reason);
-}
-
-// ===== يوم جديد (للتجربة) =====
-document.addEventListener("keydown", e => {
-    if (e.key === "n" && status === "Active") {
-        day++;
-        if (day > MAX_DAYS) return fail("انتهت مدة التحدي");
-
-        dailyStartBalance = balance;
-        dailyPnl = 0;
-        document.getElementById("day").innerText = day;
-        document.getElementById("dailyPnl").innerText = "0";
-        alert("📅 يوم جديد");
+    // تحديث الأسعار كل 5 ثواني
+    async function updatePrices() {
+      const btcPrice = await fetchCryptoPrice("BTC");
+      const eurusdPrice = await fetchForexPrice("EURUSD");
+      document.getElementById("btc-price").innerText = btcPrice;
+      document.getElementById("eurusd-price").innerText = eurusdPrice;
     }
-});
-</script>
+    updatePrices();
+    setInterval(updatePrices, 5000);
 
+    // محاكاة أوامر التداول
+    const logDiv = document.getElementById("log");
+
+    function logAction(text) {
+      const p = document.createElement("p");
+      p.innerText = text;
+      logDiv.appendChild(p);
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+
+    function buy(symbol, amount) {
+      logAction(`تم تنفيذ Buy: ${amount} من ${symbol}`);
+      // هنا يمكن ربط مع الحساب / Balance
+    }
+
+    function sell(symbol, amount) {
+      logAction(`تم تنفيذ Sell: ${amount} من ${symbol}`);
+      // هنا يمكن ربط مع الحساب / Balance
+    }
+  </script>
 </body>
 </html>
