@@ -2,22 +2,97 @@
 <html lang="ar">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>صفحة الدفع</title>
+    <title>الدفع</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #f4f6f8;
+            text-align: center;
+            padding: 40px;
+        }
+        .box {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            max-width: 400px;
+            margin: auto;
+        }
+        .address {
+            background: #eee;
+            padding: 10px;
+            border-radius: 6px;
+            word-break: break-all;
+            margin: 10px 0;
+        }
+        input[type="file"] {
+            margin: 15px 0;
+        }
+        img {
+            max-width: 100%;
+            margin-top: 10px;
+            display: none;
+            border-radius: 6px;
+        }
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            background: #007bff;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
-    <h1>صفحة الدفع التجريبية</h1>
-    <p>لقد اخترت حساب بقيمة: <span id="selected"></span>$</p>
-    <button onclick="proceed()">استمرار إلى لوحة التحكم</button>
 
-    <script>
-        // عرض القيمة المختارة
-        document.getElementById('selected').innerText = localStorage.getItem('selectedOffer');
+<div class="box">
+    <h2>الدفع</h2>
 
-        // التوجيه إلى لوحة التحكم
-        function proceed() {
-            window.location.href = "dashboard.html";
+    <p>قيمة الحساب المختار:</p>
+    <h3><span id="amount"></span>$</h3>
+
+    <hr>
+
+    <h4>USDT - TRC20</h4>
+    <div class="address">TXxxxxxxxxxxxxxxxxxxxxxxxx</div>
+
+    <h4>USDT - BEP20</h4>
+    <div class="address">0xxxxxxxxxxxxxxxxxxxxxxxx</div>
+
+    <hr>
+
+    <h4>📸 رفع Screenshot الدفع</h4>
+    <input type="file" accept="image/*" onchange="previewImage(event)">
+    <img id="preview">
+
+    <br><br>
+
+    <button onclick="confirmPayment()">لقد قمت بالدفع</button>
+</div>
+
+<script>
+    document.getElementById("amount").innerText =
+        localStorage.getItem("selectedOffer");
+
+    let imageUploaded = false;
+
+    function previewImage(event) {
+        const img = document.getElementById("preview");
+        img.src = URL.createObjectURL(event.target.files[0]);
+        img.style.display = "block";
+        imageUploaded = true;
+    }
+
+    function confirmPayment() {
+        if (!imageUploaded) {
+            alert("⚠️ يرجى رفع Screenshot الدفع أولاً");
+            return;
         }
-    </script>
+        alert("تم إرسال طلبك، سيتم التحقق يدويًا");
+        window.location.href = "dashboard.html";
+    }
+</script>
+
 </body>
 </html>
