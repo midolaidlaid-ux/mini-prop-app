@@ -52,21 +52,24 @@
 
 <div class="card" id="status" style="display:none">
   <h3>📊 حالة الحساب</h3>
-  <p>Balance: <span id="bal">1000</span>$</p>
-  <p>PnL: <span id="pnl">0</span>$</p>
+  <p>Balance: <span id="bal"></span>$</p>
+  <p>PnL: <span id="pnl"></span>$</p>
   <button onclick="trade()">صفقة تجريبية</button>
 </div>
 
 <script>
-  let balance = 1000;
-  let pnl = 0;
+  let balance, pnl;
 
   function start() {
+    balance = 1000;
+    pnl = 0;
+    document.getElementById("bal").innerText = balance;
+    document.getElementById("pnl").innerText = pnl;
     document.getElementById("status").style.display = "block";
   }
 
   function trade() {
-    let change = Math.floor(Math.random() * 200 - 100);
+    let change = Math.floor(Math.random() * 200 - 100); // عشوائي بين -100 و+100
     pnl += change;
     balance += change;
     document.getElementById("bal").innerText = balance;
