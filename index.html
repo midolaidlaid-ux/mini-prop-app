@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>Prop Challenge Mini</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+      text-align: center;
+    }
+    header {
+      padding: 20px;
+      background: #020617;
+      font-size: 20px;
+      font-weight: bold;
+    }
+    .card {
+      background: #020617;
+      margin: 20px;
+      padding: 20px;
+      border-radius: 12px;
+    }
+    button {
+      background: #22c55e;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    button:active {
+      transform: scale(0.98);
+    }
+  </style>
+</head>
+<body>
+
+<header>منصة تحدي ممولة (نسخة مصغّرة)</header>
+
+<div class="card">
+  <h3>💰 اختر التحدي</h3>
+  <p>10$ → حساب 1000$</p>
+  <p>20$ → حساب 3000$</p>
+  <p>30$ → حساب 5000$</p>
+  <button onclick="start()">ابدأ التحدي</button>
+</div>
+
+<div class="card" id="status" style="display:none">
+  <h3>📊 حالة الحساب</h3>
+  <p>Balance: <span id="bal">1000</span>$</p>
+  <p>PnL: <span id="pnl">0</span>$</p>
+  <button onclick="trade()">صفقة تجريبية</button>
+</div>
+
+<script>
+  let balance = 1000;
+  let pnl = 0;
+
+  function start() {
+    document.getElementById("status").style.display = "block";
+  }
+
+  function trade() {
+    let change = Math.floor(Math.random() * 200 - 100);
+    pnl += change;
+    balance += change;
+    document.getElementById("bal").innerText = balance;
+    document.getElementById("pnl").innerText = pnl;
+  }
+</script>
+
+</body>
+</html>
