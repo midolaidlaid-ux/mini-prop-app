@@ -2,7 +2,7 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>Prop Challenge Dashboard</title>
+<title>Prop Challenge</title>
 <style>
 body {
     font-family: Arial;
@@ -14,7 +14,7 @@ body {
     background:white;
     padding:20px;
     border-radius:10px;
-    max-width:420px;
+    max-width:450px;
     margin:auto;
 }
 .price {
@@ -32,10 +32,8 @@ button {
 .buy {background:#28a745;color:white;}
 .sell {background:#dc3545;color:white;}
 .close {background:#333;color:white;}
-.stats {
-    margin-top:15px;
-    font-size:16px;
-}
+.pass {color:green;font-weight:bold;}
+.fail {color:red;font-weight:bold;}
 </style>
 </head>
 <body>
@@ -49,21 +47,35 @@ button {
     <button class="sell" onclick="openTrade('sell')">Sell</button>
     <button class="close" onclick="closeTrade()">Close</button>
 
-    <div class="stats">
-        <p>Balance: <span id="balance">1000</span>$</p>
-        <p>PNL: <span id="pnl">0</span>$</p>
-        <p>Status: <span id="status">No Trade</span></p>
-    </div>
+    <p>Balance: <span id="balance">5000</span>$</p>
+    <p>Daily PnL: <span id="dailyPnl">0</span>$</p>
+    <p>Day: <span id="day">1</span> / 10</p>
+    <p>Status: <span id="status">Active</span></p>
 </div>
 
 <script>
-let balance = 1000;
+// ===== إعدادات =====
+const START_BALANCE = 5000;
+const TARGET_BALANCE = 6000;
+const MAX_LOSS_BALANCE = 4600;
+const DAILY_LIMIT = 200;
+const MAX_DAYS = 10;
+
+// ===== الحالة =====
+let balance = START_BALANCE;
+let day = 1;
+let dailyStartBalance = START_BALANCE;
+let dailyPnl = 0;
+
 let price = 100;
 let trade = null;
 let pnl = 0;
+let status = "Active";
 
-// تحريك السعر
+// ===== السعر =====
 setInterval(() => {
+    if (status !== "Active") return;
+
     price += (Math.random() - 0.5) * 0.5;
     document.getElementById("price").innerText = price.toFixed(2);
 
@@ -71,28 +83,82 @@ setInterval(() => {
         pnl = trade.type === "buy"
             ? (price - trade.entry) * 10
             : (trade.entry - price) * 10;
-
-        document.getElementById("pnl").innerText = pnl.toFixed(2);
     }
 }, 1000);
 
-// فتح صفقة
+// ===== فتح صفقة =====
 function openTrade(type) {
-    if (trade) return alert("يوجد صفقة مفتوحة بالفعل");
+    if (status !== "Active") return;
+    if (trade) return alert("صفقة مفتوحة بالفعل");
+
     trade = { type, entry: price };
-    document.getElementById("status").innerText = type.toUpperCase();
 }
 
-// إغلاق الصفقة
+// ===== إغلاق صفقة =====
 function closeTrade() {
-    if (!trade) return;
+    if (!trade || status !== "Active") return;
+
     balance += pnl;
-    document.getElementById("balance").innerText = balance.toFixed(2);
+    dailyPnl = balance - dailyStartBalance;
+
+    updateUI();
+
     trade = null;
     pnl = 0;
-    document.getElementById("pnl").innerText = "0";
-    document.getElementById("status").innerText = "No Trade";
+
+    checkRules();
 }
+
+// ===== تحديث الواجهة =====
+function updateUI() {
+    document.getElementById("balance").innerText = balance.toFixed(2);
+    document.getElementById("dailyPnl").innerText = dailyPnl.toFixed(2);
+}
+
+// ===== القواعد =====
+function checkRules() {
+
+    // Daily profit / loss
+    if (dailyPnl >= DAILY_LIMIT)
+        return fail("تجاوزت الحد اليومي للربح");
+
+    if (dailyPnl <= -DAILY_LIMIT)
+        return fail("تجاوزت الحد اليومي للخسارة");
+
+    // Max loss
+    if (balance <= MAX_LOSS_BALANCE)
+        return fail("وصلت إلى الحد الأقصى للخسارة");
+
+    // Target
+    if (balance >= TARGET_BALANCE) {
+        status = "Passed";
+        document.getElementById("status").innerHTML =
+            "<span class='pass'>PASSED</span>";
+        return alert("🎉 مبروك! أكملت التحدي بنجاح");
+    }
+}
+
+// ===== فشل =====
+function fail(reason) {
+    status = "Failed";
+    document.getElementById("status").innerHTML =
+        "<span class='fail'>FAILED</span>";
+    alert("❌ فشل التحدي: " + reason);
+}
+
+// ===== يوم جديد (للتجربة) =====
+document.addEventListener("keydown", e => {
+    if (e.key === "n" && status === "Active") {
+        day++;
+        if (day > MAX_DAYS) return fail("انتهت مدة التحدي");
+
+        dailyStartBalance = balance;
+        dailyPnl = 0;
+        document.getElementById("day").innerText = day;
+        document.getElementById("dailyPnl").innerText = "0";
+        alert("📅 يوم جديد");
+    }
+});
 </script>
 
 </body>
