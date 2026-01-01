@@ -1,0 +1,3 @@
+fetch("http://localhost:3000/price/crypto/btc")
+ .then(r => r.json())
+ .then(d => price = d.price);
