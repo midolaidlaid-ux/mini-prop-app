@@ -2,124 +2,123 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mini Prop Challenge</title>
+<title>Prop Challenge Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
-  body { font-family: Arial, sans-serif; padding: 20px; background: #f2f2f2; }
-  h2, h3 { color: #333; }
-  .price, .balance { font-size: 1.2em; margin: 10px 0; }
-  button { margin: 5px; padding: 10px 20px; font-size: 1em; cursor: pointer; }
-  #log { margin-top: 20px; background: #fff; padding: 10px; border-radius: 5px; max-height: 300px; overflow-y: auto; }
+body { font-family: Arial; background:#f4f4f4; padding:20px }
+.box { background:#fff; padding:15px; margin-bottom:15px; border-radius:8px }
+button { padding:10px; margin:5px }
 </style>
 </head>
+
 <body>
-<h2>Mini Prop Challenge</h2>
 
-<div class="price">
-  سعر BTC: <span id="btc-price">جارٍ التحميل...</span>
-</div>
-<div class="price">
-  سعر EUR/USD: <span id="eurusd-price">جارٍ التحميل...</span>
-</div>
+<h2>📊 Prop Challenge</h2>
 
-<div class="balance">
-  الرصيد: <span id="balance">5000</span> $  
-  | الربح/الخسارة: <span id="pnl">0</span> $  
+<div class="box">
+  💰 Balance: <b id="balance">5000</b>$ <br>
+  📈 Equity: <b id="equity">5000</b>$ <br>
+  🔁 PnL: <b id="pnl">0</b>$
 </div>
 
-<h3>أوامر التداول</h3>
-<button onclick="buy('BTC', 1)">Buy BTC</button>
-<button onclick="sell('BTC', 1)">Sell BTC</button>
-<button onclick="buy('EURUSD', 100)">Buy EUR/USD</button>
-<button onclick="sell('EURUSD', 100)">Sell EUR/USD</button>
+<div class="box">
+  BTC Price: <b id="btc">...</b> <br>
+  EURUSD Price: <b id="eurusd">...</b>
+</div>
 
-<div id="log"></div>
+<div class="box">
+  <button onclick="trade('BTC','buy')">Buy BTC</button>
+  <button onclick="trade('BTC','sell')">Sell BTC</button>
+  <br>
+  <button onclick="trade('EURUSD','buy')">Buy EURUSD</button>
+  <button onclick="trade('EURUSD','sell')">Sell EURUSD</button>
+</div>
+
+<div class="box">
+  <canvas id="chart"></canvas>
+</div>
+
+<div class="box" id="log"></div>
 
 <script>
-const backendURL = "https://prop-backend-32qf.onrender.com";
+/* ===== CONFIG ===== */
+const API = "https://prop-backend-32qf.onrender.com";
+let balance = 5000;
+let equity = 5000;
+let pnl = 0;
+let startBalance = 5000;
 
-// إعداد التحدي
+/* شروط التحدي */
 const MAX_PROFIT = 200;
 const MAX_LOSS = 4600;
-const TARGET_BALANCE = 6000;
-let balance = 5000;
-let pnl = 0;
-let challengeActive = true;
+const TARGET = 6000;
+let active = true;
 
-// محاكاة الأسعار
-async function fetchCryptoPrice(symbol) {
-  try {
-    const res = await fetch(`${backendURL}/price/crypto/${symbol.toLowerCase()}`);
-    const data = await res.json();
-    return data.price;
-  } catch { return null; }
-}
-async function fetchForexPrice(pair) {
-  try {
-    const res = await fetch(`${backendURL}/price/forex/${pair}`);
-    const data = await res.json();
-    return data.price;
-  } catch { return null; }
+/* ===== CHART ===== */
+const ctx = document.getElementById("chart");
+const chart = new Chart(ctx,{
+  type:"line",
+  data:{labels:[],datasets:[{label:"Equity",data:[],borderWidth:2}]}
+});
+
+/* ===== PRICES ===== */
+async function getPrice(type,symbol){
+  const r = await fetch(`${API}/price/${type}/${symbol}`);
+  return (await r.json()).price;
 }
 
-// تحديث الأسعار كل 5 ثواني
-async function updatePrices() {
-  const btcPrice = await fetchCryptoPrice("BTC");
-  const eurusdPrice = await fetchForexPrice("EURUSD");
-  if(btcPrice) document.getElementById("btc-price").innerText = btcPrice;
-  if(eurusdPrice) document.getElementById("eurusd-price").innerText = eurusdPrice;
+async function updatePrices(){
+  document.getElementById("btc").innerText = await getPrice("crypto","btc");
+  document.getElementById("eurusd").innerText = await getPrice("forex","EURUSD");
 }
-updatePrices();
-setInterval(updatePrices, 5000);
+setInterval(updatePrices,5000); updatePrices();
 
-// تحديث الرصيد والـ PnL
-function updateBalance() {
-  document.getElementById("balance").innerText = balance.toFixed(2);
-  document.getElementById("pnl").innerText = pnl.toFixed(2);
-}
+/* ===== TRADE ===== */
+async function trade(symbol,side){
+  if(!active){ log("❌ التحدي منتهي"); return }
 
-// تسجيل الأوامر
-const logDiv = document.getElementById("log");
-function logAction(text) {
-  const p = document.createElement("p");
-  p.innerText = text;
-  logDiv.appendChild(p);
-  logDiv.scrollTop = logDiv.scrollHeight;
-}
+  let price = symbol==="BTC"
+    ? await getPrice("crypto","btc")
+    : await getPrice("forex","EURUSD");
 
-// أوامر التداول
-function buy(symbol, amount) {
-  if(!challengeActive) { logAction("التحدي انتهى. لا يمكن التداول."); return; }
-  simulateTrade(symbol, amount, "Buy");
-}
-function sell(symbol, amount) {
-  if(!challengeActive) { logAction("التحدي انتهى. لا يمكن التداول."); return; }
-  simulateTrade(symbol, amount, "Sell");
+  let result = (Math.random()-0.5)*100; // محاكاة حركة السوق
+  pnl += side==="buy"?result:-result;
+  equity = startBalance + pnl;
+
+  chart.data.labels.push(chart.data.labels.length);
+  chart.data.datasets[0].data.push(equity);
+  chart.update();
+
+  updateUI();
+  log(`${side.toUpperCase()} ${symbol} | PnL: ${pnl.toFixed(2)}`);
+
+  checkRules();
 }
 
-// محاكاة تنفيذ الصفقة وتحديث PnL
-async function simulateTrade(symbol, amount, type) {
-  let price = 0;
-  if(symbol === "BTC") price = await fetchCryptoPrice("BTC");
-  if(symbol === "EURUSD") price = await fetchForexPrice("EURUSD");
-  if(!price) { logAction("فشل جلب السعر."); return; }
-
-  let change = type === "Buy" ? amount * price * 0.01 : -amount * price * 0.01; // محاكاة بسيطة
-  pnl += change;
-  balance = 5000 + pnl;
-
-  logAction(`${type} ${amount} من ${symbol} | السعر: ${price.toFixed(2)} | PnL: ${pnl.toFixed(2)}`);
-
-  // تحقق الشروط
-  if(pnl >= MAX_PROFIT) { logAction("وصلت للربح الأقصى. التحدي انتهى."); challengeActive = false; }
-  if(balance <= 5000 - MAX_LOSS) { logAction("وصلت للخسارة القصوى. التحدي انتهى."); challengeActive = false; }
-  if(balance >= TARGET_BALANCE) { logAction("تهانينا! وصلت للهدف. التحدي انتهى."); challengeActive = false; }
-
-  updateBalance();
+/* ===== RULES ===== */
+function checkRules(){
+  if(pnl >= MAX_PROFIT){ end("✅ وصلت الربح المسموح"); }
+  if(equity <= startBalance - MAX_LOSS){ end("❌ خسارة قصوى"); }
+  if(equity >= TARGET){ end("🎉 نجحت في التحدي"); }
 }
+function end(msg){ active=false; log(msg); }
 
-// بدء العرض
-updateBalance();
+/* ===== UI ===== */
+function updateUI(){
+  balance.innerText = startBalance;
+  equityEl.innerText = equity.toFixed(2);
+  pnlEl.innerText = pnl.toFixed(2);
+}
+const balanceEl = balance;
+const equityEl = document.getElementById("equity");
+const pnlEl = document.getElementById("pnl");
+
+function log(t){
+  document.getElementById("log").innerHTML += `<div>${t}</div>`;
+}
+updateUI();
 </script>
+
 </body>
 </html>
