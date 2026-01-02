@@ -2,97 +2,27 @@
 <html lang="ar">
 <head>
     <meta charset="UTF-8">
-    <title>الدفع</title>
+    <title>Prop Challenge - الدفع</title>
     <style>
-        body {
-            font-family: Arial;
-            background: #f4f6f8;
-            text-align: center;
-            padding: 40px;
-        }
-        .box {
-            background: white;
-            padding: 25px;
-            border-radius: 10px;
-            max-width: 400px;
-            margin: auto;
-        }
-        .address {
-            background: #eee;
-            padding: 10px;
-            border-radius: 6px;
-            word-break: break-all;
-            margin: 10px 0;
-        }
-        input[type="file"] {
-            margin: 15px 0;
-        }
-        img {
-            max-width: 100%;
-            margin-top: 10px;
-            display: none;
-            border-radius: 6px;
-        }
-        button {
-            padding: 12px 20px;
-            border: none;
-            border-radius: 6px;
-            background: #007bff;
-            color: white;
-            font-size: 16px;
-            cursor: pointer;
-        }
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        button { padding: 15px 30px; margin: 10px; font-size: 18px; }
     </style>
 </head>
 <body>
+    <h1>أكمل الدفع</h1>
+    <p id="planInfo">جارٍ التحميل...</p>
+    <p>طرق الدفع: USDT TRC20 / BEP20</p>
+    <button onclick="confirmPayment()">تم الدفع</button>
 
-<div class="box">
-    <h2>الدفع</h2>
+    <script>
+        const plan = localStorage.getItem('plan');
+        document.getElementById('planInfo').innerText = `لقد اخترت خطة: ${plan}$`;
 
-    <p>قيمة الحساب المختار:</p>
-    <h3><span id="amount"></span>$</h3>
-
-    <hr>
-
-    <h4>USDT - TRC20</h4>
-    <div class="address">TXxxxxxxxxxxxxxxxxxxxxxxxx</div>
-
-    <h4>USDT - BEP20</h4>
-    <div class="address">0xxxxxxxxxxxxxxxxxxxxxxxx</div>
-
-    <hr>
-
-    <h4>📸 رفع Screenshot الدفع</h4>
-    <input type="file" accept="image/*" onchange="previewImage(event)">
-    <img id="preview">
-
-    <br><br>
-
-    <button onclick="confirmPayment()">لقد قمت بالدفع</button>
-</div>
-
-<script>
-    document.getElementById("amount").innerText =
-        localStorage.getItem("selectedOffer");
-
-    let imageUploaded = false;
-
-    function previewImage(event) {
-        const img = document.getElementById("preview");
-        img.src = URL.createObjectURL(event.target.files[0]);
-        img.style.display = "block";
-        imageUploaded = true;
-    }
-
-    function confirmPayment() {
-        if (!imageUploaded) {
-            alert("⚠️ يرجى رفع Screenshot الدفع أولاً");
-            return;
+        function confirmPayment() {
+            // يمكن إضافة توليد توكن هنا لاحقًا
+            localStorage.setItem('paid', true);
+            window.location.href = 'dashboard.html';
         }
-        alert("تم إرسال طلبك، سيتم التحقق يدويًا");
-        window.location.href = "dashboard.html";
-    }
-</script>
-
+    </script>
 </body>
 </html>
