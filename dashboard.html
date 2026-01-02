@@ -1,131 +1,67 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8">
-  <title>Prop Challenge Dashboard</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <style>
-    body { font-family: Arial, sans-serif; background: #0f172a; color: #fff; padding: 20px; text-align: center; }
-    .card { background: #111827; border-radius: 10px; padding: 20px; max-width: 500px; margin: auto; }
-    h2,h3 { margin-bottom: 10px; }
-    #btc-price { font-size: 28px; margin: 15px 0; }
-    button { padding: 10px 20px; margin: 10px; font-size: 16px; border: none; border-radius: 6px; cursor: pointer; }
-    .buy { background: #16a34a; color: white; }
-    .sell { background: #dc2626; color: white; }
-    table { width: 100%; margin-top: 15px; border-collapse: collapse; text-align: center; }
-    table, th, td { border: 1px solid #374151; }
-    th, td { padding: 8px; }
-  </style>
+    <meta charset="UTF-8">
+    <title>Prop Challenge - Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        #price { font-size: 24px; margin-bottom: 20px; }
+        button { padding: 10px 20px; margin: 5px; }
+        #balance, #equity, #pnl { margin: 5px 0; }
+    </style>
 </head>
 <body>
+    <h1>لوحة التحكم - Prop Challenge</h1>
+    <div id="price">جارٍ التحميل...</div>
+    <div id="balance">Balance: $1000</div>
+    <div id="equity">Equity: $1000</div>
+    <div id="pnl">PnL: $0</div>
+    <button onclick="buy()">Buy</button>
+    <button onclick="sell()">Sell</button>
 
-<div class="card">
-  <h2>BTCUSDT</h2>
-  <div id="btc-price">Loading...</div>
+    <script>
+        let balance = 1000;
+        let equity = 1000;
+        let pnl = 0;
 
-  <h3>Balance: $<span id="balance">5000</span></h3>
-  <h3>Equity: $<span id="equity">5000</span></h3>
-  <h3>PnL: $<span id="pnl">0</span></h3>
+        function updateDisplay() {
+            document.getElementById('balance').innerText = `Balance: $${balance.toFixed(2)}`;
+            document.getElementById('equity').innerText = `Equity: $${equity.toFixed(2)}`;
+            document.getElementById('pnl').innerText = `PnL: $${pnl.toFixed(2)}`;
+        }
 
-  <button class="buy">Buy</button>
-  <button class="sell">Sell</button>
+        function buy() {
+            let change = Math.random() * 50;
+            pnl += change;
+            equity = balance + pnl;
+            updateDisplay();
+        }
 
-  <h3>سجل الصفقات</h3>
-  <table id="trades-table">
-    <thead>
-      <tr>
-        <th>نوع</th>
-        <th>سعر الدخول</th>
-        <th>كمية</th>
-        <th>ربح/خسارة</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-</div>
+        function sell() {
+            let change = Math.random() * -50;
+            pnl += change;
+            equity = balance + pnl;
+            updateDisplay();
+        }
 
-<script>
-let balance = 5000;
-let equity = 5000;
-let pnl = 0;
-let trades = [];
-let btcPrice = 0;
+        async function getPrice(symbol) {
+            try {
+                const response = await fetch(`https://prop-backend-32qf.onrender.com/price/crypto/${symbol}`);
+                const data = await response.json();
+                if(data.price) {
+                    document.getElementById('price').innerText = `${symbol.toUpperCase()}: $${data.price}`;
+                } else {
+                    document.getElementById('price').innerText = 'خطأ في جلب السعر';
+                }
+            } catch (err) {
+                document.getElementById('price').innerText = 'خطأ في الاتصال بالـ Backend';
+            }
+        }
 
-// لتحميل السعر من Backend
-async function loadBTCPrice() {
-  try {
-    const res = await fetch("https://prop-backend-32qf.onrender.com/price/crypto/btc");
-    const data = await res.json();
-    btcPrice = Number(data.price.toFixed(2));
-    document.getElementById("btc-price").innerText = btcPrice + " $";
-  } catch (err) {
-    document.getElementById("btc-price").innerText = "خطأ في جلب السعر";
-  }
-}
-setInterval(loadBTCPrice, 1000);
-loadBTCPrice();
-
-// تحديث العرض
-function updateDisplay() {
-  document.getElementById("balance").innerText = balance.toFixed(2);
-  document.getElementById("equity").innerText = equity.toFixed(2);
-  document.getElementById("pnl").innerText = pnl.toFixed(2);
-
-  const tbody = document.querySelector("#trades-table tbody");
-  tbody.innerHTML = "";
-  trades.forEach(trade => {
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${trade.type}</td>
-      <td>${trade.price}</td>
-      <td>${trade.amount}</td>
-      <td>${trade.profit.toFixed(2)}</td>
-    `;
-    tbody.appendChild(row);
-  });
-}
-
-// إضافة صفقة Buy أو Sell
-function addTrade(type) {
-  const amount = 0.01; // 0.01 BTC افتراضي للتجربة
-  let profit = 0;
-
-  // إذا كانت Buy، نضيف رصيد افتراضي مخصوم من Balance
-  if (type === "Buy") {
-    profit = 0; // عند الشراء لا يوجد ربح بعد
-    balance -= btcPrice * amount;
-  } else if (type === "Sell") {
-    // عند البيع نعتبر ربح/خسارة = كمية * (سعر البيع - سعر الدخول)
-    // نأخذ آخر صفقة Buy كمثال (FIFO)
-    const lastBuy = trades.slice().reverse().find(t => t.type === "Buy");
-    if (lastBuy) {
-      profit = (btcPrice - lastBuy.price) * amount;
-      balance += btcPrice * amount;
-    } else {
-      profit = 0;
-      balance += btcPrice * amount;
-    }
-  }
-
-  pnl += profit;
-  equity = balance + pnl;
-
-  // تطبيق الشروط
-  if (pnl > 200) pnl = 200;
-  if (pnl < -200) pnl = -200;
-  if (equity < 4600) equity = 4600;
-  if (equity > 6000) equity = 6000;
-
-  trades.push({ type, price: btcPrice, amount, profit });
-  updateDisplay();
-}
-
-document.querySelector(".buy").addEventListener("click", () => addTrade("Buy"));
-document.querySelector(".sell").addEventListener("click", () => addTrade("Sell"));
-
-updateDisplay();
-</script>
-
+        window.onload = () => {
+            getPrice('btc'); 
+            updateDisplay();
+        }
+    </script>
 </body>
 </html>
