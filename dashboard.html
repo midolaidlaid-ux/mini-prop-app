@@ -66,8 +66,7 @@
     async function loadBTCPrice() {
       try {
         const response = await fetch(
-          "https://prop-backend-32qf.onrender.com/price/crypto/btc",
-          { mode: "cors" }
+          "https://prop-backend-32qf.onrender.com/price/crypto/btc"
         );
         const data = await response.json();
 
