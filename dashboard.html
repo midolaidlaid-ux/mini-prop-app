@@ -1,124 +1,82 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-<meta charset="UTF-8">
-<title>Prop Challenge Dashboard</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset="UTF-8">
+  <title>Prop Challenge Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<style>
-body { font-family: Arial; background:#f4f4f4; padding:20px }
-.box { background:#fff; padding:15px; margin-bottom:15px; border-radius:8px }
-button { padding:10px; margin:5px }
-</style>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: #fff;
+      padding: 20px;
+    }
+
+    .card {
+      background: #111827;
+      border-radius: 10px;
+      padding: 20px;
+      max-width: 400px;
+      margin: auto;
+      text-align: center;
+    }
+
+    button {
+      padding: 10px 20px;
+      margin: 10px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .buy {
+      background: #16a34a;
+      color: white;
+    }
+
+    .sell {
+      background: #dc2626;
+      color: white;
+    }
+
+    #btc-price {
+      font-size: 28px;
+      margin: 15px 0;
+    }
+  </style>
 </head>
 
 <body>
 
-<h2>📊 Prop Challenge</h2>
+  <div class="card">
+    <h2>BTCUSDT</h2>
+    <div id="btc-price">Loading...</div>
 
-<div class="box">
-  💰 Balance: <b id="balance">5000</b>$ <br>
-  📈 Equity: <b id="equity">5000</b>$ <br>
-  🔁 PnL: <b id="pnl">0</b>$
-</div>
+    <button class="buy">Buy</button>
+    <button class="sell">Sell</button>
+  </div>
 
-<div class="box">
-  BTC Price: <b id="btc">...</b> <br>
-  EURUSD Price: <b id="eurusd">...</b>
-</div>
+  <script>
+    async function loadBTCPrice() {
+      try {
+        const res = await fetch(
+          "https://prop-backend-32qf.onrender.com/price/crypto/btc"
+        );
+        const data = await res.json();
 
-<div class="box">
-  <button onclick="trade('BTC','buy')">Buy BTC</button>
-  <button onclick="trade('BTC','sell')">Sell BTC</button>
-  <br>
-  <button onclick="trade('EURUSD','buy')">Buy EURUSD</button>
-  <button onclick="trade('EURUSD','sell')">Sell EURUSD</button>
-</div>
+        document.getElementById("btc-price").innerText =
+          data.price.toFixed(2) + " $";
+      } catch (e) {
+        document.getElementById("btc-price").innerText = "Error";
+      }
+    }
 
-<div class="box">
-  <canvas id="chart"></canvas>
-</div>
-
-<div class="box" id="log"></div>
-
-<script>
-/* ===== CONFIG ===== */
-const API = "https://prop-backend-32qf.onrender.com";
-let balance = 5000;
-let equity = 5000;
-let pnl = 0;
-let startBalance = 5000;
-
-/* شروط التحدي */
-const MAX_PROFIT = 200;
-const MAX_LOSS = 4600;
-const TARGET = 6000;
-let active = true;
-
-/* ===== CHART ===== */
-const ctx = document.getElementById("chart");
-const chart = new Chart(ctx,{
-  type:"line",
-  data:{labels:[],datasets:[{label:"Equity",data:[],borderWidth:2}]}
-});
-
-/* ===== PRICES ===== */
-async function getPrice(type,symbol){
-  const r = await fetch(`${API}/price/${type}/${symbol}`);
-  return (await r.json()).price;
-}
-
-async function updatePrices(){
-  document.getElementById("btc").innerText = await getPrice("crypto","btc");
-  document.getElementById("eurusd").innerText = await getPrice("forex","EURUSD");
-}
-setInterval(updatePrices,5000); updatePrices();
-
-/* ===== TRADE ===== */
-async function trade(symbol,side){
-  if(!active){ log("❌ التحدي منتهي"); return }
-
-  let price = symbol==="BTC"
-    ? await getPrice("crypto","btc")
-    : await getPrice("forex","EURUSD");
-
-  let result = (Math.random()-0.5)*100; // محاكاة حركة السوق
-  pnl += side==="buy"?result:-result;
-  equity = startBalance + pnl;
-
-  chart.data.labels.push(chart.data.labels.length);
-  chart.data.datasets[0].data.push(equity);
-  chart.update();
-
-  updateUI();
-  log(`${side.toUpperCase()} ${symbol} | PnL: ${pnl.toFixed(2)}`);
-
-  checkRules();
-}
-
-/* ===== RULES ===== */
-function checkRules(){
-  if(pnl >= MAX_PROFIT){ end("✅ وصلت الربح المسموح"); }
-  if(equity <= startBalance - MAX_LOSS){ end("❌ خسارة قصوى"); }
-  if(equity >= TARGET){ end("🎉 نجحت في التحدي"); }
-}
-function end(msg){ active=false; log(msg); }
-
-/* ===== UI ===== */
-function updateUI(){
-  balance.innerText = startBalance;
-  equityEl.innerText = equity.toFixed(2);
-  pnlEl.innerText = pnl.toFixed(2);
-}
-const balanceEl = balance;
-const equityEl = document.getElementById("equity");
-const pnlEl = document.getElementById("pnl");
-
-function log(t){
-  document.getElementById("log").innerHTML += `<div>${t}</div>`;
-}
-updateUI();
-</script>
+    // تحديث السعر كل ثانية
+    setInterval(loadBTCPrice, 1000);
+    loadBTCPrice();
+  </script>
 
 </body>
 </html>
