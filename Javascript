@@ -1,0 +1,23 @@
+import TelegramBot from 'node-telegram-bot-api';
+
+// ضع التوكن هنا
+const token = '8509851536:AAHTzXYmumV6DUmYffh_ptxam0LE5dhdcSE';
+
+// تفعيل Webhook أو Long Polling
+const bot = new TelegramBot(token, { polling: true });
+
+// رابط النسخة الأصلية للمشروع
+const appLink = 'https://yourdomain.com/index.html';
+
+// الرد على /start
+bot.onText(/\/start/, (msg) => {
+    const chatId = msg.chat.id;
+    const welcomeMsg = `مرحبًا بك في Prop Challenge!\nاضغط على الرابط للبدء:`;
+    bot.sendMessage(chatId, welcomeMsg, {
+        reply_markup: {
+            inline_keyboard: [
+                [{ text: "ابدأ التحدي", url: appLink }]
+            ]
+        }
+    });
+});
