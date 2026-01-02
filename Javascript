@@ -1,13 +1,13 @@
 import TelegramBot from 'node-telegram-bot-api';
 
-// ضع التوكن هنا
+// ضع هنا توكن البوت الخاص بك
 const token = '8509851536:AAHTzXYmumV6DUmYffh_ptxam0LE5dhdcSE';
 
-// تفعيل Webhook أو Long Polling
+// تفعيل Long Polling
 const bot = new TelegramBot(token, { polling: true });
 
 // رابط النسخة الأصلية للمشروع
-const appLink = 'https://yourdomain.com/index.html';
+const appLink = 'https://yourdomain.com/index.html'; // استبدل بـ رابطك النهائي
 
 // الرد على /start
 bot.onText(/\/start/, (msg) => {
@@ -20,4 +20,9 @@ bot.onText(/\/start/, (msg) => {
             ]
         }
     });
+});
+
+// يمكنك لاحقًا إضافة أوامر أخرى مثل /help أو /status
+bot.onText(/\/help/, (msg) => {
+    bot.sendMessage(msg.chat.id, "يمكنك الضغط على 'ابدأ التحدي' للانتقال إلى الموقع والدخول في التحدي.");
 });
